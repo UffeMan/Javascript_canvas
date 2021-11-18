@@ -1,0 +1,10 @@
+* {
+  padding: 0px;
+  margin: 0px;
+}
+
+canvas {
+  width: 800px;
+  height: 600px;
+  background-color: black;
+}
