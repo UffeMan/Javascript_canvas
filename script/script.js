@@ -114,31 +114,54 @@ B8 C7 6F
    },
  */
 
-
 "use strict";
 let canvas;
-let context;
+let ctx;
 
 // testing
 let radius = 50;
 let radiusCounter = 0.0;
 
-// Sprites
+// En bunt Sprites.
 const sprite = {
   posX: 0,
   posY: 0,
+  posZ: 0,
   speedX: 0,
   speedY: 0,
-  size: 1,
-  img: "./media/img/testsprite.png",
+  size: 0,
+  img: "",
 };
+const sprites = [];
+for (let i = 0; i < 128; i++) sprites.push(sprite);
+
+// En bunt Tiles
+const tile = {
+  posZ: 0,
+  sizeX: 64,
+  sizeY: 64,
+  alpha: 0.0,
+  img: "",
+};
+const tiles = [];
+for (let i = 0; i < 128; i++) tiles.push(tile);
+
+// En bunt Levels med scroll. Dax att göra "Hell well"
+const level = {
+  posZ: 0,
+  sizeX: 25,
+  sizeY: 19,
+  sizeZ: 4,
+};
+const levels = [];
+for (let i = 0; i < 8; i++) levels.push(level);
 
 window.onload = init;
 
 function init() {
   canvas = document.getElementById("my-canvas");
-  context = canvas.getContext("2d");
-  context.font = "30px Courier New";
+  ctx = canvas.getContext("2d");
+  ctx.font = "30px Courier New";
   window.requestAnimationFrame(gameLoop);
 }
 
@@ -148,12 +171,8 @@ function gameLoop() {
   readInput();
   updateFrame();
   draw();
-  context.fillStyle = "#808080";
-  context.fillText(
-    "SCORE:0000000000       " + (performance.now() - ts),
-    20,
-    30
-  );
+  ctx.fillStyle = "#808080";
+  ctx.fillText("SCORE:0000000000       " + (performance.now() - ts), 20, 30);
   window.requestAnimationFrame(gameLoop);
 }
 
@@ -168,27 +187,27 @@ function updateFrame() {
 }
 
 function draw() {
-  context.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   let randomColor = Math.random() > 0.5 ? "#ffffff" : "#000000";
   let randomRadius = Math.random() * 50 + 100;
-  context.fillStyle = randomColor;
-  //context.fillRect(100, 50, 150, 500);
+  ctx.fillStyle = randomColor;
+  // ctx.fillRect(100, 50, 150, 500);
 
   // test cirkel
-  context.beginPath();
-  context.lineWidth = 3;
-  context.strokeStyle = "#ffff80";
-  context.arc(400, 300, radius + 1, 0, Math.PI * 2, true);
-  context.fillStyle = "#901111";
-  context.fill();
-  context.stroke();
+  ctx.beginPath();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#ffff80";
+  ctx.arc(400, 300, radius + 1, 0, Math.PI * 2, true);
+  ctx.fillStyle = "#901111";
+  ctx.fill();
+  ctx.stroke();
 
   //test linje
-  context.beginPath();
-  context.lineWidth = 1;
-  context.strokeStyle = "#ffff00";
-  context.moveTo(40, 40);
-  context.lineTo(300, 150);
-  context.stroke();
+  ctx.beginPath();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#ffff00";
+  ctx.moveTo(0, 0);
+  ctx.lineTo(400, 300);
+  ctx.stroke();
 }
