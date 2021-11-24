@@ -118,27 +118,44 @@ B8 C7 6F
 let canvas;
 let ctx;
 
+let pic = new Image();
+
 let gameLevel = 0;
+let gameZpos = 0;
 let gameState = 0;
+let directionInput = 0;
+let screen0PosX = [0, 64, 128, 192];
+let screen0PosY = [0, 64 ,128 ,192];
+let screenPosX = [0, 0, 0, 0];
+let screenPosY = [0, 0 ,0 ,0];
+let tileSizeX = 64;
+let tileSizeY = 64;
 
 // testing
 let radius = 50;
 let radiusCounter = 0.0;
 
-// En bunt Sprites.
+// En bunt av Sprites.
 const sprite = {
   posX: 0,
   posY: 0,
   posZ: 0,
   speedX: 0,
   speedY: 0,
-  size: 0,
-  img: "",
+  size: 1,
+  angle: 0,
+  img: ""
 };
 const sprites = [];
-for (let i = 0; i < 128; i++) sprites.push(Object.assign({}, sprite));
+for (let i = 0; i < 2; i++) sprites.push(Object.assign({}, sprite));
+pic = new Image();
+pic.src = "./media/img/player-sprite.png";
+sprites[1].posX = 50;
+sprites[1].img = pic;
 
-// En bunt Tiles
+console.log(pic);
+
+ // En bunt av Tiles
 const tile = {
   alpha: 0.0,
   img: null,
@@ -147,21 +164,18 @@ const tile = {
 const tiles = [];
 for (let i = 0; i < 3; i++) tiles.push(Object.assign({}, tile)); // pushar in samma tile....    inte bra alls....    fixat!
 
-let pic = new Image();
-let pic2 = new Image();
-let pic3 = new Image();
-
+pic = new Image();
 pic.src = "./media/img/floor-tile.png";
 tiles[0].alpha = 1.0;
 tiles[0].img = pic;
-
-pic2.src = "./media/img/wall-tile.bmp";
-tiles[1].alpha = 1.2;
-tiles[1].img = pic2;
-
-pic3.src = "./media/img/wall-tile.png";
-tiles[2].alpha = 0.3;
-tiles[2].img = pic3;
+pic = new Image();
+pic.src = "./media/img/wall-tile.bmp";
+tiles[1].alpha = 1.0;
+tiles[1].img = pic;
+pic = new Image();
+pic.src = "./media/img/wall-tile.png";
+tiles[2].alpha = 1.0;
+tiles[2].img = pic;
 
 // En bunt Levels med scroll. Dax att göra "Hell Well"
 const level = {
@@ -193,11 +207,11 @@ design: [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -214,7 +228,7 @@ design: [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -283,47 +297,31 @@ function updateSound() {}
 function readInput() {}
 
 function updateFrame() {
-  /*
-  radius = (Math.sin(2 * Math.PI * radiusCounter) + 1) * 100 + 50;
-  radiusCounter += 0.005;
-  if (radiusCounter > 1) radiusCounter = 0;
-  */
+  
+ //parallax
+ canvas.width; //800
+ canvas.height; //600
+ let totalLevelSize = levels[gameLevel].design[0][0].length;
+ screenPosX[gameZpos] = 0;
 }
 
 function draw() {
-  let randomColor = Math.random() > 0.5 ? "#ffffff" : "#000000";
-  let randomRadius = Math.random() * 50 + 100;
-  ctx.fillStyle = randomColor;
-
-  // test cirkel
-  /*
-  ctx.beginPath();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = "#ffff80";
-  ctx.arc(400, 300, radius + 1, 0, Math.PI * 2, true);
-  ctx.fillStyle = "#901111";
-  ctx.fill();
-  ctx.stroke();
-*/
-  //test linje
-  /*
-  ctx.beginPath();
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = "#ffff00";
-  ctx.moveTo(0, 0);
-  ctx.lineTo(400, 300);
-  ctx.stroke();
-*/
   //Draw Level
-  for (let k = 0; k < levels[gameLevel].design.length; k++) {
+
+  for (let k = levels[gameLevel].design.length - 1; k >= 0; --k) {
     for (let j = 0; j < levels[gameLevel].design[k].length; j++) {
-      for (let i = levels[gameLevel].design[k][j].length - 1; i > 0; i--) {
+      for (let i = 0; i < levels[gameLevel].design[k][j].length; i++) {
+        ctx.globalAlpha = tiles[levels[gameLevel].design[k][j][i]].alpha;
         ctx.drawImage(
           tiles[levels[gameLevel].design[k][j][i]].img,
-          i * pic.naturalWidth - pic.naturalWidth,
-          j * pic.naturalHeight - pic.naturalHeight
+          i * pic.naturalWidth - pic.naturalWidth - screenPosX[k],
+          j * pic.naturalHeight - pic.naturalHeight - screenPosY[k]
         );
       }
     }
   }
+
+  // draw sprites
+  ctx.globalAlpha = 1;
+  ctx.drawImage(sprites[1].img, sprites[1].posX + 150, sprites[1].posY + 100);
 }
