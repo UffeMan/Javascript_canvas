@@ -118,12 +118,16 @@ B8 C7 6F
 let canvas;
 let ctx;
 
-let pic = new Image();
+let pic;
 
 let gameLevel = 0;
 let gameZpos = 0;
 let gameState = 0;
 let directionInput = 0;
+let playerAngle = 0;
+let speedX = 0;
+let speedY = 0;
+
 let screen0PosX = [0, 64, 128, 192];
 let screen0PosY = [0, 64 ,128 ,192];
 let screenPosX = [0, 0, 0, 0];
@@ -134,6 +138,37 @@ let tileSizeY = 64;
 // testing
 let radius = 50;
 let radiusCounter = 0.0;
+
+document.addEventListener("keydown", function (event) {
+  if (event.code == "ArrowUp") {
+    directionInput = directionInput | 1;
+  } else if (event.code == "ArrowLeft") {
+    directionInput = directionInput | 2;
+  } else if (event.code == "ArrowDown") {
+    directionInput = directionInput | 4;
+  } else if (event.code == "ArrowRight") {
+    directionInput = directionInput | 8;
+  }
+});
+
+document.addEventListener("keyup", function (event) {
+  if (event.code == "ArrowUp") {
+    directionInput = directionInput & !1 & 15;
+  } else if (event.code == "ArrowLeft") {
+    directionInput = directionInput & !2 & 15;
+  } else if (event.code == "ArrowDown") {
+    directionInput = directionInput & !4 & 15;
+  } else if (event.code == "ArrowRight") {
+    directionInput = directionInput & !8 & 15;
+  }
+});
+
+document.addEventListener("mousemove", function (event) {
+  playerAngle = (playerAngle + event.movementX * 0.667) % 360;
+  ///console.log(playerAngle + " mouse angle");
+});
+
+
 
 // En bunt av Sprites.
 const sprite = {
@@ -149,11 +184,9 @@ const sprite = {
 const sprites = [];
 for (let i = 0; i < 2; i++) sprites.push(Object.assign({}, sprite));
 pic = new Image();
-pic.src = "./media/img/player-sprite.png";
-sprites[1].posX = 50;
-sprites[1].img = pic;
-
-console.log(pic);
+pic.src = "./media/img/player-sprite1.png";
+sprites[0].posX = 50;
+sprites[0].img = pic;
 
  // En bunt av Tiles
 const tile = {
@@ -292,18 +325,65 @@ function gameLoop() {
   window.requestAnimationFrame(gameLoop);
 }
 
+/******************************************
+              Sound function
+*******************************************/
+
 function updateSound() {}
 
-function readInput() {}
+/******************************************
+              Read function
+*******************************************/
+
+function readInput() {
+  
+
+
+}
+
+/******************************************
+              Update function
+*******************************************/
 
 function updateFrame() {
+  //parallax
+  canvas.width; //800
+  canvas.height; //600
+  let totalLevelSizeX =
+    levels[gameLevel].design[0][0].length * tileSizeX - canvas.width;
+  let totalLevelSizeY =
+    levels[gameLevel].design[0].length * tileSizeY - canvas.height;
   
- //parallax
- canvas.width; //800
- canvas.height; //600
- let totalLevelSize = levels[gameLevel].design[0][0].length;
- screenPosX[gameZpos] = 0;
+
+  if (speedX < 0) speedX = speedX + 0.25;
+  if (speedX > 0) speedX = speedX - 0.25;
+  if (speedY < 0) speedY = speedY + 0.25;
+  if (speedY > 0) speedY = speedY - 0.25;
+
+  if ((directionInput & 1) == 1 ) {
+    speedY = speedY - 1;
+    if (speedY < -5) speedY = -5;
+  }
+  if ((directionInput & 2) == 2) {
+    speedX = speedX - 1;
+    if (speedX < -5) speedX = -5;
+  }
+  if ((directionInput & 4) == 4) {
+    speedY = speedY + 1;
+    if (speedY > 5) speedY = 5;
+  }
+  if ((directionInput & 8) == 8 ) {
+    speedX = speedX + 1;
+    if (speedX > 5) speedX = 5;
+  }
+
+  screenPosX[gameZpos] +=  speedX;
+  screenPosY[gameZpos] +=  speedY;
 }
+
+/******************************************
+              Draw function
+*******************************************/
 
 function draw() {
   //Draw Level
@@ -323,5 +403,5 @@ function draw() {
 
   // draw sprites
   ctx.globalAlpha = 1;
-  ctx.drawImage(sprites[1].img, sprites[1].posX + 150, sprites[1].posY + 100);
+  ctx.drawImage(sprites[0].img, sprites[0].posX + 367, sprites[0].posY + 267);
 }
