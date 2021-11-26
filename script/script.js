@@ -127,13 +127,21 @@ let directionInput = 0;
 let playerAngle = 0;
 let speedX = 0;
 let speedY = 0;
-
-let screen0PosX = [0, 64, 128, 192];
-let screen0PosY = [0, 64 ,128 ,192];
-let screenPosX = [0, 0, 0, 0];
-let screenPosY = [0, 0 ,0 ,0];
+let screenPosX = [0, 64, 128, 192];
+let screenPosY = [0, 64, 128, 192];
 let tileSizeX = 64;
 let tileSizeY = 64;
+let topLevelX;
+let topLevelY;
+let sizeLevelX;
+let sizeLevelY;
+
+let framerate = 60;
+let averageFramerate;
+let sumFramerate = 0;
+let fCounter = 0;
+let oldPerformance;
+let newPerformance;
 
 // testing
 let radius = 50;
@@ -153,13 +161,13 @@ document.addEventListener("keydown", function (event) {
 
 document.addEventListener("keyup", function (event) {
   if (event.code == "ArrowUp") {
-    directionInput = directionInput & !1 & 15;
+    directionInput = directionInput ^ (1 & 15);
   } else if (event.code == "ArrowLeft") {
-    directionInput = directionInput & !2 & 15;
+    directionInput = directionInput ^ (2 & 15);
   } else if (event.code == "ArrowDown") {
-    directionInput = directionInput & !4 & 15;
+    directionInput = directionInput ^ (4 & 15);
   } else if (event.code == "ArrowRight") {
-    directionInput = directionInput & !8 & 15;
+    directionInput = directionInput ^ (8 & 15);
   }
 });
 
@@ -167,8 +175,6 @@ document.addEventListener("mousemove", function (event) {
   playerAngle = (playerAngle + event.movementX * 0.667) % 360;
   ///console.log(playerAngle + " mouse angle");
 });
-
-
 
 // En bunt av Sprites.
 const sprite = {
@@ -179,7 +185,7 @@ const sprite = {
   speedY: 0,
   size: 1,
   angle: 0,
-  img: ""
+  img: "",
 };
 const sprites = [];
 for (let i = 0; i < 2; i++) sprites.push(Object.assign({}, sprite));
@@ -188,7 +194,7 @@ pic.src = "./media/img/player-sprite1.png";
 sprites[0].posX = 50;
 sprites[0].img = pic;
 
- // En bunt av Tiles
+// En bunt av Tiles
 const tile = {
   alpha: 0.0,
   img: null,
@@ -198,16 +204,16 @@ const tiles = [];
 for (let i = 0; i < 3; i++) tiles.push(Object.assign({}, tile)); // pushar in samma tile....    inte bra alls....    fixat!
 
 pic = new Image();
-pic.src = "./media/img/floor-tile.png";
+pic.src = "./media/img/floor-tile1.png";
 tiles[0].alpha = 1.0;
 tiles[0].img = pic;
 pic = new Image();
-pic.src = "./media/img/wall-tile.bmp";
+pic.src = "./media/img/wall-tile.png";
 tiles[1].alpha = 1.0;
 tiles[1].img = pic;
 pic = new Image();
-pic.src = "./media/img/wall-tile.png";
-tiles[2].alpha = 1.0;
+pic.src = "./media/img/floor-glas-tile.png";
+tiles[2].alpha = 0.5;
 tiles[2].img = pic;
 
 // En bunt Levels med scroll. Dax att göra "Hell Well"
@@ -218,12 +224,12 @@ design: [
   [
     [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-    [1, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [1, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [1, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+    [1, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -313,15 +319,35 @@ function init() {
   window.requestAnimationFrame(gameLoop);
 }
 
+/******************************************
+*******************************************
+              Maine function
+*******************************************
+*******************************************/
+
 function gameLoop() {
   let ts = performance.now();
+  oldPerformance = newPerformance;
+  newPerformance = ts;
+  framerate = 1000 / (newPerformance - oldPerformance);
+  sumFramerate = sumFramerate + framerate;
+  fCounter++;
+  if (fCounter >= 20) {
+    averageFramerate = Math.floor(sumFramerate / fCounter);
+    fCounter = 0;
+    sumFramerate = 0;
+  }
   updateSound();
   readInput();
   updateFrame();
   draw();
   ctx.clearRect(0, 0, canvas.width, 40);
-  ctx.fillStyle = "#c0c0c0";
-  ctx.fillText("SCORE:0000000000       " + (performance.now() - ts), 20, 30);
+  ctx.fillStyle = "#80f080";
+  ctx.fillText(
+    "SCORE:0000000000 " + averageFramerate + " Hz  " + (performance.now() - ts),
+    20,
+    30
+  );
   window.requestAnimationFrame(gameLoop);
 }
 
@@ -335,11 +361,7 @@ function updateSound() {}
               Read function
 *******************************************/
 
-function readInput() {
-  
-
-
-}
+function readInput() {}
 
 /******************************************
               Update function
@@ -347,20 +369,13 @@ function readInput() {
 
 function updateFrame() {
   //parallax
-  canvas.width; //800
-  canvas.height; //600
-  let totalLevelSizeX =
-    levels[gameLevel].design[0][0].length * tileSizeX - canvas.width;
-  let totalLevelSizeY =
-    levels[gameLevel].design[0].length * tileSizeY - canvas.height;
-  
 
   if (speedX < 0) speedX = speedX + 0.25;
   if (speedX > 0) speedX = speedX - 0.25;
   if (speedY < 0) speedY = speedY + 0.25;
   if (speedY > 0) speedY = speedY - 0.25;
 
-  if ((directionInput & 1) == 1 ) {
+  if ((directionInput & 1) == 1) {
     speedY = speedY - 1;
     if (speedY < -5) speedY = -5;
   }
@@ -372,13 +387,26 @@ function updateFrame() {
     speedY = speedY + 1;
     if (speedY > 5) speedY = 5;
   }
-  if ((directionInput & 8) == 8 ) {
+  if ((directionInput & 8) == 8) {
     speedX = speedX + 1;
     if (speedX > 5) speedX = 5;
   }
 
-  screenPosX[gameZpos] +=  speedX;
-  screenPosY[gameZpos] +=  speedY;
+  let parallaxSpeed = 1.0;
+  let framerateKompesation = 1;
+  if (framerate) framerateKompesation = 60.0 / framerate;
+
+  for (let i = gameZpos; i < levels[gameLevel].design.length; i++) {
+    screenPosX[i] += speedX * parallaxSpeed * framerateKompesation;
+    screenPosY[i] += speedY * parallaxSpeed * framerateKompesation;
+    parallaxSpeed = parallaxSpeed - 0.1;
+  }
+
+  // Svart runt leveln
+  sizeLevelX = levels[gameLevel].design[0][0].length * tileSizeX;
+  sizeLevelY = levels[gameLevel].design[0].length * tileSizeY;
+  topLevelX = -screenPosX[gameZpos];
+  topLevelY = -screenPosY[gameZpos];
 }
 
 /******************************************
@@ -388,14 +416,14 @@ function updateFrame() {
 function draw() {
   //Draw Level
 
-  for (let k = levels[gameLevel].design.length - 1; k >= 0; --k) {
+  for (let k = levels[gameLevel].design.length - 1; k >= gameZpos; --k) {
     for (let j = 0; j < levels[gameLevel].design[k].length; j++) {
       for (let i = 0; i < levels[gameLevel].design[k][j].length; i++) {
         ctx.globalAlpha = tiles[levels[gameLevel].design[k][j][i]].alpha;
         ctx.drawImage(
           tiles[levels[gameLevel].design[k][j][i]].img,
-          i * pic.naturalWidth - pic.naturalWidth - screenPosX[k],
-          j * pic.naturalHeight - pic.naturalHeight - screenPosY[k]
+          i * pic.naturalWidth - screenPosX[k],
+          j * pic.naturalHeight - screenPosY[k]
         );
       }
     }
@@ -404,4 +432,30 @@ function draw() {
   // draw sprites
   ctx.globalAlpha = 1;
   ctx.drawImage(sprites[0].img, sprites[0].posX + 367, sprites[0].posY + 267);
+
+  // Draw 4 black boxes to the outer edges of the level
+  if (canvas.width - topLevelX >= 0) {
+    ctx.clearRect(0, 0, canvas.width, topLevelY);
+  }
+  if (canvas.height - topLevelY >= 0) {
+    ctx.clearRect(0, topLevelY, topLevelX, -topLevelY + canvas.height);
+  }
+
+  if (canvas.height - (sizeLevelY + topLevelY) >= 0) {
+    ctx.clearRect(
+      0,
+      sizeLevelY + topLevelY,
+      canvas.width,
+      canvas.height - (sizeLevelY + topLevelY)
+    );
+  }
+
+  if (sizeLevelY + topLevelY >= 0 && -(canvas.width + topLevelX) >= 0) {
+    ctx.clearRect(
+      sizeLevelX + topLevelX,
+      0,
+      -(canvas.width + topLevelX),
+      sizeLevelY + topLevelY
+    );
+  }
 }
