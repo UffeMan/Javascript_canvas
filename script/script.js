@@ -129,12 +129,14 @@ let speedX = 0;
 let speedY = 0;
 let screenPosX = [0, 64, 128, 192];
 let screenPosY = [0, 64, 128, 192];
-let tileSizeX = 64;
-let tileSizeY = 64;
 let topLevelX;
 let topLevelY;
-let sizeLevelX;
-let sizeLevelY;
+
+let tileWidth = 64;
+let tileHeight = 64;
+let levelWidth = 25;
+let levelHeight = 19;
+let levelDepth = 4;
 
 let framerate = 60;
 let averageFramerate;
@@ -142,6 +144,10 @@ let sumFramerate = 0;
 let fCounter = 0;
 let oldPerformance;
 let newPerformance;
+
+
+let level;
+
 
 // testing
 let radius = 50;
@@ -161,13 +167,13 @@ document.addEventListener("keydown", function (event) {
 
 document.addEventListener("keyup", function (event) {
   if (event.code == "ArrowUp") {
-    directionInput = directionInput ^ (1 & 15);
+    directionInput = directionInput ^ 1 & 15;
   } else if (event.code == "ArrowLeft") {
-    directionInput = directionInput ^ (2 & 15);
+    directionInput = directionInput ^ 2 & 15;
   } else if (event.code == "ArrowDown") {
-    directionInput = directionInput ^ (4 & 15);
+    directionInput = directionInput ^ 4 & 15;
   } else if (event.code == "ArrowRight") {
-    directionInput = directionInput ^ (8 & 15);
+    directionInput = directionInput ^ 8 & 15;
   }
 });
 
@@ -201,23 +207,46 @@ const tile = {
 };
 
 const tiles = [];
-for (let i = 0; i < 3; i++) tiles.push(Object.assign({}, tile)); // pushar in samma tile....    inte bra alls....    fixat!
+for (let i = 0; i < 9; i++) tiles.push(Object.assign({}, tile)); // pushar in samma tile....    inte bra alls....    fixat!
 
 pic = new Image();
-pic.src = "./media/img/floor-tile1.png";
-tiles[0].alpha = 1.0;
+pic.src = "./media/img/tile-floor-left.png";
+tiles[0].alpha = 1;
 tiles[0].img = pic;
 pic = new Image();
-pic.src = "./media/img/wall-tile.png";
-tiles[1].alpha = 1.0;
+pic.src = "./media/img/tile-floor-right.png";
+tiles[1].alpha = 1;
 tiles[1].img = pic;
 pic = new Image();
-pic.src = "./media/img/floor-glas-tile.png";
-tiles[2].alpha = 0.5;
+pic.src = "./media/img/tile-floor-cross.png";
+tiles[2].alpha = 1;
 tiles[2].img = pic;
-
+pic = new Image();
+pic.src = "./media/img/floor-glas-tile.png";
+tiles[3].alpha = 0.5;
+tiles[3].img = pic;
+pic = new Image();
+pic.src = "./media/img/floor-glas-tile.png";
+tiles[4].alpha = 1;
+tiles[4].img = pic;
+pic = new Image();
+pic.src = "./media/img/tile-floor-cross.png";
+tiles[5].alpha = 1;
+tiles[5].img = pic;
+pic = new Image();
+pic.src = "./media/img/tile-floor-cross.png";
+tiles[6].alpha = 1;
+tiles[6].img = pic;
+pic = new Image();
+pic.src = "./media/img/tile-floor-cross.png";
+tiles[7].alpha = 1;
+tiles[7].img = pic;
+pic = new Image();
+pic.src = "./media/img/wall-tile.png";
+tiles[8].alpha = 1;
+tiles[8].img = pic;
 // En bunt Levels med scroll. Dax att göra "Hell Well"
-const level = {
+level = {
   levelName: "Soft start",
 
 design: [
@@ -307,6 +336,9 @@ design: [
   ]
 ],
 };
+//console.log(level);
+createLevel();
+
 const levels = [];
 for (let i = 0; i < 1; i++) levels.push(Object.assign({}, level));
 
@@ -393,18 +425,18 @@ function updateFrame() {
   }
 
   let parallaxSpeed = 1.0;
-  let framerateKompesation = 1;
-  if (framerate) framerateKompesation = 60.0 / framerate;
+  let framerateCompensation = 1;
+  if (framerate) framerateCompensation = 60.0 / framerate;
 
   for (let i = gameZpos; i < levels[gameLevel].design.length; i++) {
-    screenPosX[i] += speedX * parallaxSpeed * framerateKompesation;
-    screenPosY[i] += speedY * parallaxSpeed * framerateKompesation;
+    screenPosX[i] += speedX * parallaxSpeed * framerateCompensation;
+    screenPosY[i] += speedY * parallaxSpeed * framerateCompensation;
     parallaxSpeed = parallaxSpeed - 0.1;
   }
 
   // Svart runt leveln
-  sizeLevelX = levels[gameLevel].design[0][0].length * tileSizeX;
-  sizeLevelY = levels[gameLevel].design[0].length * tileSizeY;
+  levelWidth = levels[gameLevel].design[0][0].length * tileWidth;
+  levelHeight = levels[gameLevel].design[0].length * tileHeight;
   topLevelX = -screenPosX[gameZpos];
   topLevelY = -screenPosY[gameZpos];
 }
@@ -441,21 +473,61 @@ function draw() {
     ctx.clearRect(0, topLevelY, topLevelX, -topLevelY + canvas.height);
   }
 
-  if (canvas.height - (sizeLevelY + topLevelY) >= 0) {
+  if (canvas.height - (levelHeight + topLevelY) >= 0) {
     ctx.clearRect(
       0,
-      sizeLevelY + topLevelY,
+      levelHeight + topLevelY,
       canvas.width,
-      canvas.height - (sizeLevelY + topLevelY)
+      canvas.height - (levelHeight + topLevelY)
     );
   }
 
-  if (sizeLevelY + topLevelY >= 0 && -(canvas.width + topLevelX) >= 0) {
+  if (levelHeight + topLevelY >= 0 && -(canvas.width + topLevelX) >= 0) {
     ctx.clearRect(
-      sizeLevelX + topLevelX,
+      levelWidth + topLevelX,
       0,
       -(canvas.width + topLevelX),
-      sizeLevelY + topLevelY
+      levelHeight + topLevelY
     );
   }
+}
+
+
+
+//tiles[levels[gameLevel].design[k][j][i]];
+function createLevel() {
+  // Nice floor
+  let floor = [0,1,0,1,0,1,0,1,2,2];
+  for (let k = levelDepth - 1; k >= 0; --k) {
+    for (let j = 0; j < levelHeight; j++) {
+      for (let i = 0; i < levelWidth; i++) {
+        level.design[k][j][i] = floor[Math.floor(Math.random()*10)]; 
+        
+      }
+    }
+  }
+ 
+  // Add some glass floor tiles (kan bli mycket bättre)
+  for (let k = levelDepth - 1; k >= 0; --k) {
+    for (let j = 0; j < levelHeight; j++) {
+      for (let i = 0; i < levelWidth; i++) {
+        if(Math.random() < 0.1) level.design[k][j][i] = 3; 
+        
+      }
+    }
+  }
+  
+  // Add a wall
+  for (let k = levelDepth - 1; k >= 0; --k) {
+    for (let j = 0; j < levelHeight; j++) {
+      for (let i = 0; i < levelWidth; i++) {
+        if(i == 0 || i == levelWidth - 1 || j == 0 || j == levelHeight-1){
+         level.design[k][j][i] = 8; 
+        }
+      }
+    }
+  }
+  
+
+
 }
