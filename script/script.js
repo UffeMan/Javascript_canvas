@@ -1,119 +1,3 @@
-/* C64 color codes
-$RGBCOLOR0=000000
-$RGBCOLOR1=ffffff
-$RGBCOLOR2=882000
-$RGBCOLOR3=68d0a8
-$RGBCOLOR4=a838a0
-$RGBCOLOR5=50b818
-$RGBCOLOR6=181090
-$RGBCOLOR7=f0e858
-$RGBCOLOR8=a04800
-$RGBCOLOR9=472b1b
-$RGBCOLOR10=c87870
-$RGBCOLOR11=484848
-$RGBCOLOR12=808080
-$RGBCOLOR13=98ff98
-$RGBCOLOR14=5090d0
-$RGBCOLOR15=b8b8b8
-
-alternativt... (antagligen bättre)
-
-00 00 00
-FF FF FF
-68 37 2B
-70 A4 B2
-6F 3D 86
-58 8D 43
-35 28 79
-B8 C7 6F
-6F 4F 25
-43 39 00
-9A 67 59
-44 44 44
-6C 6C 6C
-9A D2 84
-6C 5E B5
-95 95 95
-
-
-//default (VICE I think)
-   {
-      RGB2REF(0x000000),
-      RGB2REF(0xffffff),
-      RGB2REF(0x894036),
-      RGB2REF(0x7abfc7),
-      RGB2REF(0x8a46ae),
-      RGB2REF(0x68a941),
-      RGB2REF(0x3e31a2),
-      RGB2REF(0xd0dc71),
-      RGB2REF(0x905f25),
-      RGB2REF(0x5c4700),
-      RGB2REF(0xbb776d),
-      RGB2REF(0x555555),
-      RGB2REF(0x808080),
-      RGB2REF(0xacea88),
-      RGB2REF(0x7c70da),
-      RGB2REF(0xababab)
-   },
-   //Pepto
-   {
-      RGB2REF(0x000000),
-      RGB2REF(0xFFFFFF),
-      RGB2REF(0x68372B),
-      RGB2REF(0x70A4B2),
-      RGB2REF(0x6F3D86),
-      RGB2REF(0x588D43),
-      RGB2REF(0x352879),
-      RGB2REF(0xB8C76F),
-      RGB2REF(0x6F4F25),
-      RGB2REF(0x433900),
-      RGB2REF(0x9A6759),
-      RGB2REF(0x444444),
-      RGB2REF(0x6C6C6C),
-      RGB2REF(0x9AD284),
-      RGB2REF(0x6C5EB5),
-      RGB2REF(0x959595)
-   },
-   //colodore
-   {
-      RGB2REF(0x000000),
-      RGB2REF(0xffffff),
-      RGB2REF(0x813338),
-      RGB2REF(0x75cec8),
-      RGB2REF(0x8e3c97),
-      RGB2REF(0x56ac4d),
-      RGB2REF(0x2e2c9b),
-      RGB2REF(0xedf171),
-      RGB2REF(0x8e5029),
-      RGB2REF(0x553800),
-      RGB2REF(0xc46c71),
-      RGB2REF(0x4a4a4a),
-      RGB2REF(0x7b7b7b),
-      RGB2REF(0xa9ff9f),
-      RGB2REF(0x706deb),
-      RGB2REF(0xb2b2b2),
-   },
-   //PALette
-   {
-      RGB2REF(0x000000),
-      RGB2REF(0xd5d5d5),
-      RGB2REF(0x72352c),
-      RGB2REF(0x659fa6),
-      RGB2REF(0x733a91),
-      RGB2REF(0x568d35),
-      RGB2REF(0x2e237d),
-      RGB2REF(0xaeb75e),
-      RGB2REF(0x774f1e),
-      RGB2REF(0x4b3c00),
-      RGB2REF(0x9c635a),
-      RGB2REF(0x474747),
-      RGB2REF(0x6b6b6b),
-      RGB2REF(0x8fc271),
-      RGB2REF(0x675db6),
-      RGB2REF(0x8f8f8f),
-   },
- */
-
 "use strict";
 let canvas;
 let ctx;
@@ -129,6 +13,8 @@ let speedX = 0;
 let speedY = 0;
 let screenPosX = [0, 60, 120, 180];
 let screenPosY = [0, 60, 120, 180];
+let oldScreenPosX = 0;
+let oldScreenPosY = 0;
 let topLevelX;
 let topLevelY;
 
@@ -145,10 +31,24 @@ let fCounter = 0;
 let oldPerformance;
 let newPerformance;
 
+let bulletDirection = 0;
+let bulletSpeed = 4;
+
+const activeBullet = [];
 // testing
 let radius = 50;
 let radiusCounter = 0.0;
 
+const sprite = {
+  posX: 0,
+  posY: 0,
+  posZ: 0,
+  speedX: 0,
+  speedY: 0,
+  size: 0,
+  angle: 0,
+  img: "",
+};
 document.addEventListener("keydown", function (event) {
   if (event.code == "ArrowUp") {
     directionInput = directionInput | 1;
@@ -158,6 +58,20 @@ document.addEventListener("keydown", function (event) {
     directionInput = directionInput | 4;
   } else if (event.code == "ArrowRight") {
     directionInput = directionInput | 8;
+  } else if (event.code == "ControlRight" || event.code == "AltRight") {
+    // beräkna riktning på skotten
+    bulletDirection = Math.atan2(speedY, speedX);
+    activeBullet.push(Object.assign({}, sprite));
+    activeBullet[activeBullet.length - 1].posX = 400 - 32;
+    activeBullet[activeBullet.length - 1].posY = 300 - 32;
+    activeBullet[activeBullet.length - 1].img = "";
+    activeBullet[activeBullet.length - 1].speedX =
+      bulletSpeed * Math.cos(bulletDirection);
+    activeBullet[activeBullet.length - 1].speedY =
+      bulletSpeed * Math.sin(bulletDirection);
+    pic = new Image();
+    pic.src = "./media/img/sprite-bullet.png";
+    activeBullet[activeBullet.length - 1].img = pic;
   }
 });
 
@@ -170,6 +84,20 @@ document.addEventListener("keyup", function (event) {
     directionInput = directionInput ^ (4 & 15);
   } else if (event.code == "ArrowRight") {
     directionInput = directionInput ^ (8 & 15);
+  } else if (event.code == "ControlRight" || event.code == "AltRight") {
+    // beräkna riktning på skotten
+    bulletDirection = Math.atan2(speedY, speedX);
+    activeBullet.push(Object.assign({}, sprite));
+    activeBullet[activeBullet.length - 1].posX = 400 - 32;
+    activeBullet[activeBullet.length - 1].posY = 300 - 32;
+    activeBullet[activeBullet.length - 1].img = "";
+    activeBullet[activeBullet.length - 1].speedX =
+      bulletSpeed * Math.cos(bulletDirection);
+    activeBullet[activeBullet.length - 1].speedY =
+      bulletSpeed * Math.sin(bulletDirection);
+    pic = new Image();
+    pic.src = "./media/img/sprite-bullet.png";
+    activeBullet[activeBullet.length - 1].img = pic;
   }
 });
 
@@ -179,18 +107,9 @@ document.addEventListener("mousemove", function (event) {
 });
 
 // En bunt av Sprites.
-const sprite = {
-  posX: 0,
-  posY: 0,
-  posZ: 0,
-  speedX: 0,
-  speedY: 0,
-  size: 1,
-  angle: 0,
-  img: "",
-};
+
 const sprites = [];
-for (let i = 0; i < 2; i++) sprites.push(Object.assign({}, sprite));
+for (let i = 0; i < 1; i++) sprites.push(Object.assign({}, sprite));
 pic = new Image();
 pic.src = "./media/img/player-sprite1.png";
 sprites[0].img = pic;
@@ -249,7 +168,7 @@ let lname1 = [
   "Shiny ",
   "Rotten ",
   "Superior ",
-  "Dull "
+  "Dull ",
 ];
 let lname2 = [
   "car",
@@ -351,7 +270,6 @@ const level = {
     ],
   ],
 };
-//console.log(level);
 createLevel();
 
 const levels = [];
@@ -388,13 +306,18 @@ function gameLoop() {
   readInput();
   updateFrame();
   draw();
-  ctx.clearRect(0, 0, canvas.width, 40);
-  ctx.fillStyle = "#80f080";
+
+  ctx.clearRect(0, 0, canvas.width, 42);
+  ctx.shadowBlur = 5;
+  ctx.shadowColor = "red";
+  ctx.fillStyle = "#80f080f0";
+  ctx.fill();
   ctx.fillText(
     "SCORE:0000000000 " + averageFramerate + " Hz  " + level.levelName, //+ (performance.now() - ts
     20,
     30
   );
+  ctx.shadowBlur = 0;
   window.requestAnimationFrame(gameLoop);
 }
 
@@ -439,9 +362,29 @@ function updateFrame() {
     if (speedX > 5) speedX = 5;
   }
 
+  // Move and remove bullets
+  for (let i = 0; i < activeBullet.length; i++) {
+    if (
+      activeBullet[i].posX < 0 ||
+      activeBullet[i].posX > canvas.width ||
+      activeBullet[i].posY < 0 ||
+      activeBullet[i].posY > canvas.height
+    ) {
+      activeBullet.splice(i, 1);
+    } else {
+      activeBullet[i].posX +=
+        activeBullet[i].speedX - (screenPosX[gameLevel] - oldScreenPosX);
+      activeBullet[i].posY +=
+        activeBullet[i].speedY - (screenPosY[gameLevel] - oldScreenPosY);
+    }
+  }
+
   let parallaxSpeed = 1.0;
   let framerateCompensation = 1;
   if (framerate) framerateCompensation = 60.0 / framerate;
+
+  oldScreenPosX = screenPosX[gameLevel];
+  oldScreenPosY = screenPosY[gameLevel];
 
   for (let i = gameZpos; i < levels[gameLevel].design.length; i++) {
     screenPosX[i] += speedX * parallaxSpeed * framerateCompensation;
@@ -478,6 +421,19 @@ function draw() {
 
   // draw sprites
   ctx.globalAlpha = 1;
+  ctx.shadowColor = "orange";
+  ctx.shadowBlur = 10;
+
+  for (let i = 0; i < activeBullet.length; i++) {
+    if (activeBullet[i]) {
+      ctx.drawImage(
+        activeBullet[i].img,
+        activeBullet[i].posX,
+        activeBullet[i].posY
+      );
+    }
+  }
+  ctx.shadowColor = "red";
   ctx.drawImage(sprites[0].img, sprites[0].posX + 368, sprites[0].posY + 268);
 
   // Draw 4 black boxes to the outer edges of the level
@@ -509,14 +465,16 @@ function draw() {
 
 //tiles[levels[gameLevel].design[k][j][i]];
 function createLevel() {
-  level.levelName = lname1[Math.floor(Math.random() * 8)] + lname2[Math.floor(Math.random() * 8)];
+  level.levelName =
+    lname1[Math.floor(Math.random() * 8)] +
+    lname2[Math.floor(Math.random() * 8)];
 
   // Nice floor
-  let floor = [0, 1, 0, 1, 0, 1, 0, 1, 2, 2];
+  let floor = [0, 1, 0, 1, 0, 1, 0, 1, 2];
   for (let k = levelDepth - 1; k >= 0; --k) {
     for (let j = 0; j < levelHeight; j++) {
       for (let i = 0; i < levelWidth; i++) {
-        level.design[k][j][i] = floor[Math.floor(Math.random() * 10)];
+        level.design[k][j][i] = floor[Math.floor(Math.random() * floor.length)];
       }
     }
   }
@@ -525,7 +483,7 @@ function createLevel() {
   for (let k = levelDepth - 1; k >= 0; --k) {
     for (let j = 0; j < levelHeight; j++) {
       for (let i = 0; i < levelWidth; i++) {
-        if(k < levelDepth-1){
+        if (k < levelDepth - 1) {
           if (Math.random() < 0.1) level.design[k][j][i] = 3;
         }
         if (Math.random() < 0.02) level.design[k][j][i] = 8;
